@@ -1,1 +1,11 @@
-
+.env
+*.db
+*.log
+*.pyc
+__pycache__/
+*.png
+*.jpg
+charts/
+venv/
+.env
+.DS_Store
