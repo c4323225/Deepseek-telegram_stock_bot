@@ -1,16 +1,29 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from models import Base
+import os
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.sql import func
 
-engine = create_engine(os.getenv("DATABASE_URL"))
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    user_id = Column(Integer, primary_key=True)
+    username = Column(String(50))
+    referral_count = Column(Integer, default=0)
+    invited_by = Column(Integer, default=0)  # Storing the user_id of the referrer
+
+class Referral(Base):
+    __tablename__ = 'referrals'
+    id = Column(Integer, primary_key=True)
+    referrer_id = Column(Integer)
+    referred_id = Column(Integer)
+    timestamp = Column(DateTime, default=func.now())
 
 def init_db():
-    Base.metadata.create_all(bind=engine)
+    engine = create_engine(os.getenv("DATABASE_URL", "sqlite:///stockbot.db"))
+    Base.metadata.create_all(engine)
+    return engine
 
-def db_session():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+def get_session(engine):
+    Session = sessionmaker(bind=engine)
+    return Session()
