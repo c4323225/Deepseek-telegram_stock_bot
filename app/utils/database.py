@@ -1,29 +1,51 @@
+import sqlite3
 import os
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
-from sqlalchemy.sql import func
+import logging
 
-Base = declarative_base()
-
-class User(Base):
-    __tablename__ = 'users'
-    user_id = Column(Integer, primary_key=True)
-    username = Column(String(50))
-    referral_count = Column(Integer, default=0)
-    invited_by = Column(Integer, default=0)  # Storing the user_id of the referrer
-
-class Referral(Base):
-    __tablename__ = 'referrals'
-    id = Column(Integer, primary_key=True)
-    referrer_id = Column(Integer)
-    referred_id = Column(Integer)
-    timestamp = Column(DateTime, default=func.now())
+logger = logging.getLogger(__name__)
 
 def init_db():
-    engine = create_engine(os.getenv("DATABASE_URL", "sqlite:///stockbot.db"))
-    Base.metadata.create_all(engine)
-    return engine
+    try:
+        DATABASE_NAME = os.getenv("DATABASE_NAME", "stockbot.db")
+        conn = sqlite3.connect(DATABASE_NAME)
+        cursor = conn.cursor()
+        
+        # Create users table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            username TEXT,
+            referral_count INTEGER DEFAULT 0,
+            invited_by INTEGER DEFAULT 0
+        )''')
+        
+        # Create referrals table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referrals (
+            referrer_id INTEGER,
+            referred_id INTEGER,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )''')
+        
+        # Create portfolio table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS portfolio (
+            user_id INTEGER,
+            symbol TEXT,
+            quantity REAL,
+            buy_price REAL,
+            FOREIGN KEY(user_id) REFERENCES users(user_id)
+        )''')
+        
+        conn.commit()
+        conn.close()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
 
-def get_session(engine):
-    Session = sessionmaker(bind=engine)
-    return Session()
+def get_db_connection():
+    DATABASE_NAME = os.getenv("DATABASE_NAME", "stockbot.db")
+    return sqlite3.connect(DATABASE_NAME)
+
+# Initialize database on import
+init_db()
