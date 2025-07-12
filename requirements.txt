@@ -1,1 +1,9 @@
-
+python-telegram-bot==20.3
+yfinance==0.2.31
+matplotlib==3.7.2
+requests==2.31.0
+python-dotenv==1.0.0
+pandas==2.0.3
+numpy==1.24.4
+sqlalchemy==2.0.20
+alembic==1.12.0
