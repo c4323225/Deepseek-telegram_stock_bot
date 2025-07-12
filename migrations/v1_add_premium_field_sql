@@ -1,0 +1,5 @@
+-- Add premium status field to users table
+ALTER TABLE users ADD COLUMN premium_status INTEGER DEFAULT 0;
+
+-- Add premium expiration date
+ALTER TABLE users ADD COLUMN premium_expiry DATE;
